@@ -15,8 +15,9 @@ O que preciso fazer é registrar certinho qual é o botão que está acionando m
 passar esses dados ao micro após ele acordar. 
 */
 #include <stdio.h>
-#include <string.h>
 #include "esp_sleep.h"
+#include "freertos/FreeRTOS.h"
+#include "freertos/task.h"
 #include "nvs.h"
 #include "nvs_flash.h"
 #include "soc/rtc_cntl_reg.h"
@@ -28,8 +29,31 @@ passar esses dados ao micro após ele acordar.
 #define PINO_EIXO_X GPIO_NUM_18
 #define PINO_EIXO_Y GPIO_NUM_19
 #define NUM_TIMER_CHANNELS 2
+static enum channels_pwm{
+    CHANNEL_Y,
+    CHANNEL_X
+};
 
-ledc_channel_config_t  ledc_channel[NUM_TIMER_CHANNELS];
+// Aqui crio um número NUM_TIMER_CHANNELS de structs contendo as importantes para ledc_channel.
+static ledc_channel_config_t  ledc_channel[NUM_TIMER_CHANNELS] = {
+    {
+        .channel = LEDC_CHANNEL_0,
+        .duty = 0,
+        .gpio_num = PINO_EIXO_Y,
+        .speed_mode = LEDC_HIGH_SPEED_MODE,
+        .hpoint = 0,
+        .timer_sel = LEDC_TIMER_0,
+    },
+    {
+        .channel = LEDC_CHANNEL_1,
+        .duty = 0,
+        .gpio_num = PINO_EIXO_Y,
+        .speed_mode = LEDC_HIGH_SPEED_MODE,
+        .hpoint = 0,
+        .timer_sel = LEDC_TIMER_0,
+    }
+};
+
 // Aqui defino a variável que quero utilizar depois de sair do deep_sleep
 void app_main() {
     esp_sleep_wakeup_cause_t cause = esp_sleep_get_wakeup_cause();
@@ -92,28 +116,6 @@ static void config_hw(){
         .speed_mode = LEDC_HIGH_SPEED_MODE,
         .timer_num = LEDC_TIMER_0,
         .clk_cfg = LEDC_AUTO_CLK,
-    };
-
-    // Aqui crio um número NUM_TIMER_CHANNELS de structs contendo as importantes para ledc_channel.
-    ledc_channel[0] = {
-        {
-            .channel = LEDC_CHANNEL_0,
-            .duty = 0,
-            .gpio_num = PINO_EIXO_Y,
-            .speed_mode = LEDC_HIGH_SPEED_MODE,
-            .hpoint = 0,
-            .timer_sel = LEDC_TIMER_0,
-        }
-    };
-    ledc_channel[1] = {
-        {
-            .channel = LEDC_CHANNEL_1,
-            .duty = 0,
-            .gpio_num = PINO_EIXO_Y,
-            .speed_mode = LEDC_HIGH_SPEED_MODE,
-            .hpoint = 0,
-            .timer_sel = LEDC_TIMER_0,
-        }
     };
 
     // Aqui realizo a escrita das configurações dos canais de PWM que pretendo utilizar.
@@ -185,18 +187,29 @@ static void write_joystick_direction(int num_botao){
     switch(num_botao){
         case 25:
             // Aqui configuro o duty cycle dos meus dois pinos a depender do seu canal.
-            ledc_set_duty(ledc_channel[0].speed_mode, ledc_channel[0].channel, 1000);
-            ledc_update_duty(ledc_channel[0].speed_mode, ledc_channel[0].channel);
-            ledc_set_duty(ledc_channel[1].speed_mode, ledc_channel[1].channel, 2000);
-            ledc_update_duty(ledc_channel[1].speed_mode, ledc_channel[1].channel);
-            vTaskDelay(500 / portTICK_PERIOD_MS);
+            ledc_set_duty(ledc_channel[CHANNEL_X].speed_mode, ledc_channel[CHANNEL_X].channel, 2000);
+            ledc_update_duty(ledc_channel[CHANNEL_X].speed_mode, ledc_channel[CHANNEL_X].channel);
+            ledc_set_duty(ledc_channel[CHANNEL_Y].speed_mode, ledc_channel[CHANNEL_Y].channel, 4000);
+            ledc_update_duty(ledc_channel[CHANNEL_Y].speed_mode, ledc_channel[CHANNEL_Y].channel);
+            vTaskDelay(pdMS_TO_TICKS(500));
             break;
         case 26:
+            ledc_set_duty(ledc_channel[CHANNEL_X].speed_mode, ledc_channel[CHANNEL_X].channel, 4000);
+            ledc_update_duty(ledc_channel[CHANNEL_X].speed_mode, ledc_channel[CHANNEL_X].channel);
+            ledc_set_duty(ledc_channel[CHANNEL_Y].speed_mode, ledc_channel[CHANNEL_Y].channel, 2000);
+            ledc_update_duty(ledc_channel[CHANNEL_Y].speed_mode, ledc_channel[CHANNEL_Y].channel);
+            vTaskDelay(pdMS_TO_TICKS(500));
             break;
         case 27:
+            ledc_set_duty(ledc_channel[CHANNEL_X].speed_mode, ledc_channel[CHANNEL_X].channel, 10);
+            ledc_update_duty(ledc_channel[CHANNEL_X].speed_mode, ledc_channel[CHANNEL_X].channel);
+            ledc_set_duty(ledc_channel[CHANNEL_Y].speed_mode, ledc_channel[CHANNEL_Y].channel, 2000);
+            ledc_update_duty(ledc_channel[CHANNEL_Y].speed_mode, ledc_channel[CHANNEL_Y].channel);
+            vTaskDelay(pdMS_TO_TICKS(500));
             break;
         default:
-        break;
+            printf("O valor recebido foi distinto de 25, 26 e 27.");
+            break;
     }
 }
 
