@@ -29,6 +29,8 @@ passar esses dados ao micro após ele acordar.
 #define PINO_EIXO_X GPIO_NUM_18
 #define PINO_EIXO_Y GPIO_NUM_19
 #define NUM_TIMER_CHANNELS 2
+#define NUM_BUTTONS_OUTPUT 2
+
 static enum channels_pwm{
     CHANNEL_Y,
     CHANNEL_X
@@ -53,6 +55,10 @@ static ledc_channel_config_t  ledc_channel[NUM_TIMER_CHANNELS] = {
         .timer_sel = LEDC_TIMER_0,
     }
 };
+
+// Aqui declaro as funções que irei manipular ao longo do programa:
+static void write_joystick_direction(int num_botao);
+static void config_hw();
 
 // Aqui defino a variável que quero utilizar depois de sair do deep_sleep
 void app_main() {
@@ -87,21 +93,14 @@ void app_main() {
     esp_deep_sleep_start();
 }
 
-static void config_hw(){
+void config_hw(){
     /*
     Nesta primeira parte configuro os pinos que irei utilizar para a escrita dos valores PWM
     nos pinos de saída que vão alimentar o circuito principal.
     Note-se que primeiro preciso configurar os pinos que irei utilizar, qual será o seu estado de funcionamento
     normal, para depois realizar a escrita do duty cycle correspondente.
     */
-    gpio_config_t io_conf;
-    io_conf.mode = GPIO_MODE_OUTPUT;
-    io_conf.pin_bit_mask = GPIO_LED_PIN_SEL;
-    io_conf.intr_type = GPIO_INTR_DISABLE;
-    io_conf.pull_down_en = 0;
-    io_conf.pull_up_en = 0;
-    gpio_config(&io_conf);
-
+   
     /*
     [ Configurações do Timer e Canais do PWM ]
 
@@ -117,6 +116,9 @@ static void config_hw(){
         .timer_num = LEDC_TIMER_0,
         .clk_cfg = LEDC_AUTO_CLK,
     };
+
+    // Aqui configuro direto o timer do PWM.
+    ledc_timer_config(&ledc_timer);
 
     // Aqui realizo a escrita das configurações dos canais de PWM que pretendo utilizar.
     for (int ch = 0; ch < NUM_TIMER_CHANNELS; ch++) {
@@ -171,7 +173,7 @@ static void config_hw(){
     #2 : Aqui defino qual estado o ESP32 deve registrar para fazer o sistema acordar do deepsleep. 
          No meu caso, quero que ele acorde quando a entrada em qualquer botão vire HIGH.
     */
-    esp_err_t err = esp_sleep_enable_ext1_wakeup((1ULL<GPIO_NUM_25)|(1ULL<GPIO_NUM_26)|(1ULL<GPIO_NUM_27),ESP_EXT1_WAKEUP_ANY_HIGH);
+    esp_err_t err = esp_sleep_enable_ext1_wakeup((1ULL<<GPIO_NUM_25)|(1ULL<<GPIO_NUM_26)|(1ULL<<GPIO_NUM_27),ESP_EXT1_WAKEUP_ANY_HIGH);
     ESP_ERROR_CHECK( err );
 }
 
@@ -183,7 +185,7 @@ ativado a minha interrupção ext1. A depender do pino que tenha feito o trabalh
 de valores nas saidas PWM do ESP32 aproveitando a biblioteca ledc nativa do ESP32.
 Para fazer esse sinal ser uma tensão AC, vamos utilizar um circuito simples retificador na saida.
 */
-static void write_joystick_direction(int num_botao){
+void write_joystick_direction(int num_botao){
     switch(num_botao){
         case 25:
             // Aqui configuro o duty cycle dos meus dois pinos a depender do seu canal.
