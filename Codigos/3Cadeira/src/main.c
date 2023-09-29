@@ -25,10 +25,15 @@ passar esses dados ao micro após ele acordar.
 #include "driver/ledc.h"
 #include "driver/rtc_io.h"
 
+#define PINO_EIXO_X GPIO_NUM_18
+#define PINO_EIXO_Y GPIO_NUM_19
+#define NUM_TIMER_CHANNELS 2
+
+ledc_channel_config_t  ledc_channel[NUM_TIMER_CHANNELS];
 // Aqui defino a variável que quero utilizar depois de sair do deep_sleep
 void app_main() {
     esp_sleep_wakeup_cause_t cause = esp_sleep_get_wakeup_cause();
-
+    int num_botao = 0;
     /*
     Aqui conferimos o que fez o ESP32 acordar do deep_sleep. Caso NÃO tenha sido
     a interrupção EXT1, voltamos a executar ele (Isto é pois o botão de reset é uma interrupção
@@ -46,18 +51,76 @@ void app_main() {
          _builtin_ffsll(wakeup_pin_mask).
         */
         if (wakeup_pin_mask != 0) {
-            int num_botao = __builtin_ffsll(wakeup_pin_mask) - 1;
+            num_botao = __builtin_ffsll(wakeup_pin_mask) - 1;
                 printf("Wake up from GPIO %d\n", num_botao);
         } else {
             printf("Wake up from GPIO\n");
         }
-        write_joystick_direction();
+        // Talvez faça sentido trocar posição deste aqui.
+        write_joystick_direction(num_botao);
     }
     printf("Entering deep sleep.\n\n");
     esp_deep_sleep_start();
 }
 
 static void config_hw(){
+    /*
+    Nesta primeira parte configuro os pinos que irei utilizar para a escrita dos valores PWM
+    nos pinos de saída que vão alimentar o circuito principal.
+    Note-se que primeiro preciso configurar os pinos que irei utilizar, qual será o seu estado de funcionamento
+    normal, para depois realizar a escrita do duty cycle correspondente.
+    */
+    gpio_config_t io_conf;
+    io_conf.mode = GPIO_MODE_OUTPUT;
+    io_conf.pin_bit_mask = GPIO_LED_PIN_SEL;
+    io_conf.intr_type = GPIO_INTR_DISABLE;
+    io_conf.pull_down_en = 0;
+    io_conf.pull_up_en = 0;
+    gpio_config(&io_conf);
+
+    /*
+    [ Configurações do Timer e Canais do PWM ]
+
+    Nesta seção do código realizo a configuração do timer e dos canais que utilizarei neste projeto
+    para gerar os sinais PWM que vão sair dos meus dois pinos (18 e 19). Note-se que por estarmos usando
+    o ESPIDF estamos precisando configurar os structs ou, como gosto de chamar, "pseudo-registradores" para
+    definir certinho os parametros dos nossos periféricos.
+    */
+    ledc_timer_config_t ledc_timer = {
+        .duty_resolution = LEDC_TIMER_10_BIT,
+        .freq_hz = 1000,
+        .speed_mode = LEDC_HIGH_SPEED_MODE,
+        .timer_num = LEDC_TIMER_0,
+        .clk_cfg = LEDC_AUTO_CLK,
+    };
+
+    // Aqui crio um número NUM_TIMER_CHANNELS de structs contendo as importantes para ledc_channel.
+    ledc_channel[0] = {
+        {
+            .channel = LEDC_CHANNEL_0,
+            .duty = 0,
+            .gpio_num = PINO_EIXO_Y,
+            .speed_mode = LEDC_HIGH_SPEED_MODE,
+            .hpoint = 0,
+            .timer_sel = LEDC_TIMER_0,
+        }
+    };
+    ledc_channel[1] = {
+        {
+            .channel = LEDC_CHANNEL_1,
+            .duty = 0,
+            .gpio_num = PINO_EIXO_Y,
+            .speed_mode = LEDC_HIGH_SPEED_MODE,
+            .hpoint = 0,
+            .timer_sel = LEDC_TIMER_0,
+        }
+    };
+
+    // Aqui realizo a escrita das configurações dos canais de PWM que pretendo utilizar.
+    for (int ch = 0; ch < NUM_TIMER_CHANNELS; ch++) {
+        ledc_channel_config(&ledc_channel[ch]);
+    }
+
     /*
     Aqui deixo claro os pinos que pretendo utilizar dentro da minha aplicação para ativar o EXT1.
     A escolha dos pinos não foi arbritária. Precisamos usar pinos que sejam de RTC e além disso que sejam
@@ -118,9 +181,15 @@ ativado a minha interrupção ext1. A depender do pino que tenha feito o trabalh
 de valores nas saidas PWM do ESP32 aproveitando a biblioteca ledc nativa do ESP32.
 Para fazer esse sinal ser uma tensão AC, vamos utilizar um circuito simples retificador na saida.
 */
-static void write_joystick_direction( int num_botao){
+static void write_joystick_direction(int num_botao){
     switch(num_botao){
         case 25:
+            // Aqui configuro o duty cycle dos meus dois pinos a depender do seu canal.
+            ledc_set_duty(ledc_channel[0].speed_mode, ledc_channel[0].channel, 1000);
+            ledc_update_duty(ledc_channel[0].speed_mode, ledc_channel[0].channel);
+            ledc_set_duty(ledc_channel[1].speed_mode, ledc_channel[1].channel, 2000);
+            ledc_update_duty(ledc_channel[1].speed_mode, ledc_channel[1].channel);
+            vTaskDelay(500 / portTICK_PERIOD_MS);
             break;
         case 26:
             break;
