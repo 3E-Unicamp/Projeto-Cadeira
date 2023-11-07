@@ -18,12 +18,12 @@ Possivelmente a implementação possa ser feita de um jeito totalmente eletrôni
 
 # Etapas do Projeto
 
-** Teste de parâmetros da cadeira de rodas (1 semana): ** Nesta primeira etapa será realizado o teste e mensuramento de vários sinais do controlador externo da cadeira de rodas. Será necessário realizar um encontro presencial para entender o funcionamento do circuito atual.
-** Teste de circuitos de controle em simuladores (1 semana): ** Nesta etapa será realizado o desenho e montagem dos circuitos a serem utilizados no projeto dentro de simuladores. A depender das peças projetadas, será realizada a compra dos componentes a serem utilizados no projeto físico do circuito.
-** Testes em Protoboard (1 semana): ** Nesta etapa será realizada a montagem do circuito em uma placa de ensaio, para validar o seu funcionamento e realizar os ajustes necessários para seu bom funcionamento.
-** Teste de funcionamento na cadeira de rodas (1 semana): ** Nesta etapa será realizada uma outra sessão de testes com a cadeira de rodas e o controle externo para validar o funcionamento da montagem física do circuito. 
-** Soldagem do circuito em placa universal (1 semana): ** Aqui será realizada a montagem do circuito testado com a cadeira de rodas em uma placa universal para facilitar o seu encapsulamento.
-** Teste de funcionamento na cadeira de rodas (1 semana): ** Nesta etapa, iremos validar o funcionamento do circuito montado em uma placa universal e iremos realizar a montagem dela na cadeira de rodas.
+**TTeste de parâmetros da cadeira de rodas (1 semana):** Nesta primeira etapa será realizado o teste e mensuramento de vários sinais do controlador externo da cadeira de rodas. Será necessário realizar um encontro presencial para entender o funcionamento do circuito atual.
+**Teste de circuitos de controle em simuladores (1 semana):** Nesta etapa será realizado o desenho e montagem dos circuitos a serem utilizados no projeto dentro de simuladores. A depender das peças projetadas, será realizada a compra dos componentes a serem utilizados no projeto físico do circuito.
+**Testes em Protoboard (1 semana):** Nesta etapa será realizada a montagem do circuito em uma placa de ensaio, para validar o seu funcionamento e realizar os ajustes necessários para seu bom funcionamento.
+**Teste de funcionamento na cadeira de rodas (1 semana):** Nesta etapa será realizada uma outra sessão de testes com a cadeira de rodas e o controle externo para validar o funcionamento da montagem física do circuito. 
+**Soldagem do circuito em placa universal (1 semana):** Aqui será realizada a montagem do circuito testado com a cadeira de rodas em uma placa universal para facilitar o seu encapsulamento.
+**Teste de funcionamento na cadeira de rodas (1 semana):** Nesta etapa, iremos validar o funcionamento do circuito montado em uma placa universal e iremos realizar a montagem dela na cadeira de rodas.
 
 ---- 24 de Novembro : Etapa 1 finaliza ----
 
